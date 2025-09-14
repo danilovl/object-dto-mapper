@@ -41,22 +41,51 @@ Example: we have an entity and a DTO.
 ```php
 <?php declare(strict_types=1)
 
-namespace App\ObjectMapper
+namespace App\Entity;
 
 use DateTimeImmutable;
-use Danilovl\ObjectDtoMapper\Service\ObjectToDtoMapper;
-use Danilovl\ObjectDtoMapper\Attribute\Map;
-use Symfony\Component\Serializer\Attribute\Groups;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
 
+#[ORM\Entity]
+#[ORM\Table(name: 'user')]
 final class UserEntity
 {
-    public function __construct(
-        public string $name,
-        public int $age,
-        public ?DateTimeImmutable $registeredAt,
-        public ?string $email,
-    ) {}
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: Types::INTEGER)]
+    public int $id;
+
+    #[ORM\Column(type: Types::STRING, length: 255)]
+    public string $name;
+
+    #[ORM\Column(type: Types::STRING, length: 255)]
+    public string $gender;
+
+    #[ORM\Column(type: Types::STRING, length: 255)]
+    public string $username;
+
+    #[ORM\Column(type: Types::STRING, length: 255)]
+    public string $password;
+
+    #[ORM\Column(type: Types::INTEGER)]
+    public int $age;
+
+    #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
+    public ?DateTimeImmutable $registeredAt = null;
+
+    #[ORM\Column(type: Types::STRING, length: 255, nullable: true)]
+    public ?string $email = null;
+
+    #[ORM\Column(type: Types::SIMPLE_ARRAY)]
+    public array $roles;
 }
+```
+
+```php
+<?php declare(strict_types=1)
+
+namespace App\DTO
 
 final class UserDto
 {
@@ -67,11 +96,31 @@ final class UserDto
         public ?string $email,
     ) {}
 }
+```
 
-$entity = new UserEntity('John', 30, new DateTimeImmutable('2026-01-01T10:00:00+00:00'), 'john@example.com');
-$mapper = new ObjectToDtoMapper();
+```php
+<?php declare(strict_types=1);
 
-$dto = $mapper->map($entity, UserDto::class);
+namespace App\Controller;
+
+use App\Entity\UserEntity;
+use App\Dto\UserDto;
+use Danilovl\ObjectDtoMapper\Service\ObjectToDtoMapperInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Routing\Annotation\Route;
+
+final class UserController
+{
+    public function __construct(private readonly ObjectToDtoMapperInterface $mapper) {}
+
+    #[Route('/api/users/{id}', name: 'api_users', methods: ['GET'])]
+    public function show(UserEntity $userEntity): JsonResponse
+    {
+        $dto = $this->mapper->map($userEntity, UserDto::class);
+
+        return new JsonResponse($dto);
+    }
+}
 ```
 
 ## #[Map] attribute
