@@ -22,9 +22,9 @@ It supports conditional mapping (if), value transformations (transform), collect
 - Filter DTO properties by groups (allowGroups/ignoreGroups) using Symfony\Component\Serializer\Attribute\Groups on DTO
 
 ## Requirements
-- PHP 8.3+
-- symfony/property-access 7.0+
-- symfony/serializer 7.0+
+- PHP 8.5+
+- symfony/property-access 8.0+
+- symfony/serializer 8.0+
 
 ## Installation
 

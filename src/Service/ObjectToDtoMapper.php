@@ -142,7 +142,7 @@ class ObjectToDtoMapper implements ObjectToDtoMapperInterface
             $groupAttrs = $property->getAttributes(Groups::class);
             $propertyGroups = [];
             foreach ($groupAttrs as $attr) {
-                $propertyGroups = array_merge($propertyGroups, $attr->newInstance()->getGroups());
+                $propertyGroups = array_merge($propertyGroups, $attr->newInstance()->groups);
             }
 
             if (!empty($ignoreGroups) && !empty(array_intersect($ignoreGroups, $propertyGroups))) {
