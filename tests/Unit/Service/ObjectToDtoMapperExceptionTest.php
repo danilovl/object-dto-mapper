@@ -24,10 +24,13 @@ use Danilovl\ObjectDtoMapper\Tests\Mock\MapTransform\{
 };
 use Danilovl\ObjectDtoMapper\Service\ObjectToDtoMapper;
 use Danilovl\ObjectDtoMapper\Tests\Mock\Entity\MockEntity;
-use Danilovl\ObjectDtoMapper\Tests\Mock\Service\EmailNotEmptyMapIfService;
+use Danilovl\ObjectDtoMapper\Tests\Mock\MapIf\MockDtoIfContainerWrongType;
+use Danilovl\ObjectDtoMapper\Tests\Mock\Service\{
+    ArrayContainer,
+    EmailNotEmptyMapIfService,
+    UppercaseMapTransformService
+};
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
-use RuntimeException as PhpRuntimeException;
 
 final class ObjectToDtoMapperExceptionTest extends TestCase
 {
@@ -37,33 +40,10 @@ final class ObjectToDtoMapperExceptionTest extends TestCase
 
     protected function setUp(): void
     {
-        $services = [
+        $container = new ArrayContainer([
             EmailNotEmptyMapIfService::class => new EmailNotEmptyMapIfService,
-        ];
-
-        $container = new class($services) implements ContainerInterface {
-            /** @var array<string, object> */
-            public array $services;
-
-            public function __construct(array $services)
-            {
-                $this->services = $services;
-            }
-
-            public function get(string $id)
-            {
-                if (!$this->has($id)) {
-                    throw new class ( 'Service not found: ' . $id ) extends PhpRuntimeException {};
-                }
-
-                return $this->services[$id];
-            }
-
-            public function has(string $id): bool
-            {
-                return array_key_exists($id, $this->services);
-            }
-        };
+            UppercaseMapTransformService::class => new UppercaseMapTransformService,
+        ]);
 
         $this->mapperWithContainer = new ObjectToDtoMapper($container);
         $this->mapper = new ObjectToDtoMapper;
@@ -166,5 +146,31 @@ final class ObjectToDtoMapperExceptionTest extends TestCase
         $this->expectExceptionMessage($message);
 
         $this->mapperWithContainer->map($entity, MockDtoTransformContainerWrongType::class);
+    }
+
+    public function testIfContainerWithoutConfiguredContainerThrows(): void
+    {
+        $this->expectException(MappingIfException::class);
+        $this->expectExceptionMessage(sprintf('Map(if) container service not found: "%s" (no container configured in the mapper)', EmailNotEmptyMapIfService::class));
+
+        $this->mapper->map(new MockEntity('John', 20, 'a@a.a'), \Danilovl\ObjectDtoMapper\Tests\Mock\MapIf\MockDtoIfContainerEmail::class);
+    }
+
+    public function testIfContainerWrongServiceTypeThrows(): void
+    {
+        $this->expectException(MappingIfException::class);
+        $this->expectExceptionMessage(sprintf('Map(if) container "%s" is not a valid callable service', UppercaseMapTransformService::class));
+
+        $this->mapperWithContainer->map(new MockEntity('John', 20), MockDtoIfContainerWrongType::class);
+    }
+
+    public function testNonNullablePropertyReceivesNullFromNestedPathContainsPath(): void
+    {
+        $entity = new \Danilovl\ObjectDtoMapper\Tests\Mock\Entity\MockNestedEntity('Parent', new MockEntity('Child', 1, null));
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('(path: "entity.email")');
+
+        $this->mapper->map($entity, \Danilovl\ObjectDtoMapper\Tests\Mock\Exception\NestedNotNullableDto::class);
     }
 }

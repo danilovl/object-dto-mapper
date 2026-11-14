@@ -3,21 +3,17 @@
 namespace Danilovl\ObjectDtoMapper\Attribute;
 
 use Attribute;
+use Closure;
 use Danilovl\ObjectDtoMapper\Exception\{
     MappingIfException,
     MappingTransformException
 };
 
-#[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_PROPERTY | Attribute::IS_REPEATABLE)]
+#[Attribute(Attribute::TARGET_PROPERTY | Attribute::TARGET_PARAMETER)]
 readonly class Map
 {
     /**
-     * @param string|class-string|null $target The class to map to
-     * @param string|class-string|null $source The property o map from
-     * @param string|bool|callable(mixed, object): bool|null $if A boolean or a callable that instructs whether to map
-     * @param string|null $ifContainer A service id that instructs whether to map
-     * @param (string|callable(mixed, object): mixed)|null $transform A callable that transforms the value during mapping
-     * @param string|null $transformContainer A service id from container that transforms the value during mapping
+     * @param class-string|null $target
      */
     public function __construct(
         public ?string $target = null,
@@ -35,16 +31,20 @@ readonly class Map
             throw new MappingTransformException('Map(transform) configuration invalid: cannot set both transform and transformContainer at the same time');
         }
 
-        if ($ifContainer !== null && mb_trim($ifContainer) === '') {
-            $message = 'Map(if) container definition must be a non-empty string';
-
-            throw new MappingIfException($message);
+        if ($this->ifContainer !== null && mb_trim($this->ifContainer) === '') {
+            throw new MappingIfException('Map(if) container definition must be a non-empty string');
         }
 
-        if ($transformContainer !== null && mb_trim($transformContainer) === '') {
-            $message = 'Map(transformContainer) container definition must be a non-empty string';
+        if ($this->transformContainer !== null && mb_trim($this->transformContainer) === '') {
+            throw new MappingTransformException('Map(transformContainer) container definition must be a non-empty string');
+        }
 
-            throw new MappingTransformException($message);
+        if ($this->if !== null && !is_bool($this->if) && !is_string($this->if) && !is_array($this->if) && !$this->if instanceof Closure) {
+            throw new MappingIfException(sprintf('Map(if) definition must be bool, string, array or Closure, %s given', get_debug_type($this->if)));
+        }
+
+        if ($this->transform !== null && !is_string($this->transform) && !is_array($this->transform) && !$this->transform instanceof Closure) {
+            throw new MappingTransformException(sprintf('Map(transform) definition must be string, array or Closure, %s given', get_debug_type($this->transform)));
         }
     }
 }

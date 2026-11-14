@@ -1,0 +1,9 @@
+<?php declare(strict_types=1);
+
+namespace Danilovl\ObjectDtoMapper\Tests\Mock\Conversion;
+
+enum Priority: int
+{
+    case Low = 1;
+    case High = 2;
+}

@@ -2,7 +2,14 @@
 
 $finder = (new PhpCsFixer\Finder())
     ->in([__DIR__. '/src', __DIR__ . '/tests'])
-    ->exclude('var');
+    ->exclude('var')
+    // php-cs-fixer 3.92 does not support PHP 8.5 closures in attributes ("visibility_required" adds "public" to them)
+    ->notPath([
+        'Mock/MapIf/MockDtoIfClosure.php',
+        'Mock/MapTransform/MockDtoTransformClosure.php',
+        'Mock/MapTransform/MockDtoTransformToDateTime.php',
+        'Mock/Security/TransformedObjectDto.php',
+    ]);
 
 return (new PhpCsFixer\Config())
     ->setRules([

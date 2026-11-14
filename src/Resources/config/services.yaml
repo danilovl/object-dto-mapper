@@ -1,0 +1,12 @@
+services:
+  Danilovl\ObjectDtoMapper\Service\ObjectToDtoMapper:
+    public: true
+    arguments:
+      $container: !tagged_locator { tag: 'danilovl.object_dto_mapper.handler' }
+      $propertyAccessor: '@?property_accessor'
+      $allowObjectPassthrough: '%danilovl.object_dto_mapper.allow_object_passthrough%'
+      $maxDepth: '%danilovl.object_dto_mapper.max_depth%'
+
+  Danilovl\ObjectDtoMapper\Service\ObjectToDtoMapperInterface:
+    alias: Danilovl\ObjectDtoMapper\Service\ObjectToDtoMapper
+    public: true

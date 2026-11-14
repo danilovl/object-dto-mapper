@@ -70,4 +70,31 @@ final class MapAttributeTest extends TestCase
 
         new Map(transformContainer: "  \t\n ");
     }
+
+    public function testIfInvalidTypeThrows(): void
+    {
+        $this->expectException(MappingIfException::class);
+        $this->expectExceptionMessage('Map(if) definition must be bool, string, array or Closure, int given');
+
+        new Map(if: 1);
+    }
+
+    public function testTransformBoolThrows(): void
+    {
+        $this->expectException(MappingTransformException::class);
+        $this->expectExceptionMessage('Map(transform) definition must be string, array or Closure, bool given');
+
+        new Map(transform: true);
+    }
+
+    public function testValidDefinitionsAreAccepted(): void
+    {
+        $closure = static fn (mixed $value): mixed => $value;
+
+        $this->assertSame($closure, new Map(if: $closure)->if);
+        $this->assertSame($closure, new Map(transform: $closure)->transform);
+        $this->assertSame('trim', new Map(transform: 'trim')->transform);
+        $this->assertSame(['A', 'b'], new Map(if: ['A', 'b'])->if);
+        $this->assertFalse(new Map(if: false)->if);
+    }
 }

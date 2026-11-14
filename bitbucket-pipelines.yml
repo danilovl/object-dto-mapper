@@ -1,4 +1,4 @@
-image: php:8.3-alpine
+image: php:8.5-alpine
 
 pipelines:
   default:
@@ -7,4 +7,4 @@ pipelines:
         script:
           - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
           - composer install
-          - vendor/bin/phpunit tests
+          - composer tests
